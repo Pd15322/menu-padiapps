@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Digitale</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Montserrat', sans-serif; background: #FAFAFA; min-height: 100vh; color: #2C2C2C; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 60px 20px; background: #FFFFFF; border-bottom: 1px solid #E8E8E8; margin-bottom: 40px; }
+        .restaurant-name { font-family: 'Cormorant Garamond', serif; font-size: 3em; font-weight: 600; letter-spacing: 3px; color: #1A1A1A; margin-bottom: 15px; }
+        .menu-title { font-size: 0.9em; font-weight: 300; letter-spacing: 8px; text-transform: uppercase; color: #B8860B; }
+        .divider { width: 60px; height: 2px; background: linear-gradient(90deg, transparent, #B8860B, transparent); margin: 20px auto; }
+        .loading { text-align: center; padding: 80px 20px; }
+        .spinner { width: 40px; height: 40px; border: 2px solid #E8E8E8; border-top-color: #B8860B; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        .loading p { font-weight: 300; color: #888; letter-spacing: 2px; font-size: 0.85em; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error { text-align: center; padding: 80px 20px; color: #888; }
+        .error-icon { font-size: 3em; margin-bottom: 20px; opacity: 0.5; }
+        .category { margin-bottom: 50px; background: #FFFFFF; border-radius: 4px; box-shadow: 0 2px 20px rgba(0,0,0,0.04); overflow: hidden; }
+        .category-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8em; font-weight: 600; padding: 25px 30px; background: #1A1A1A; color: #FFFFFF; letter-spacing: 2px; }
+        .subcategory { padding: 0 30px; margin-bottom: 10px; }
+        .subcategory-title { font-family: 'Cormorant Garamond', serif; font-size: 1.4em; font-weight: 600; padding: 18px 30px; background: #B8860B; color: #FFFFFF; letter-spacing: 2px; width: calc(100% + 60px); margin-left: -30px; margin-right: -30px; display: block; }
+
+        /* ── FOTO PIATTO ── */
+        .item-foto-wrapper { width: calc(100% + 60px); margin-left: -30px; margin-right: -30px; margin-bottom: 0; overflow: hidden; }
+        .item-foto { width: 100%; height: auto; display: block; filter: brightness(1.05) contrast(1.1) saturate(1.2); }
+
+        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; transition: all 0.3s ease; }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item:hover { background: #FEFEFE; padding-left: 10px; padding-right: 10px; margin: 0 -10px; border-radius: 4px; }
+
+        /* ── CARD ARTICOLO ── */
+        .item-card { background: #FFFFFF; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); margin-bottom: 20px; overflow: hidden; }
+        .item-card .menu-item { padding: 16px 20px; border-bottom: none; margin: 0; }
+        .item-card .menu-item:hover { padding-left: 20px; padding-right: 20px; margin: 0; background: #FEFEFE; border-radius: 0; }
+        .item-card .item-foto-wrapper { width: 100%; margin-left: 0; margin-right: 0; }
+        .has-foto .menu-item { padding-top: 16px; }
+
+        .item-info { flex: 1; padding-right: 20px; }
+        .item-name { font-weight: 500; font-size: 1.05em; margin-bottom: 6px; color: #1A1A1A; }
+        .item-description { font-size: 0.85em; color: #999; font-style: italic; font-weight: 300; margin-bottom: 6px; }
+        .item-ingredients { font-size: 0.9em; color: #777; font-weight: 300; line-height: 1.5; margin-bottom: 6px; }
+        .item-allergens { margin-top: 8px; }
+        .allergen-number { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: #FFF8E7; border: 1px solid #B8860B; border-radius: 50%; font-size: 0.7em; font-weight: 600; color: #B8860B; margin-right: 4px; }
+        .item-price { font-family: 'Cormorant Garamond', serif; font-size: 1.3em; font-weight: 600; color: #1A1A1A; white-space: nowrap; }
+        .item-price::before { content: '€ '; font-size: 0.85em; }
+        .item-variants { margin-top: 12px; padding-left: 15px; border-left: 2px solid #F0F0F0; }
+        .variant { display: flex; justify-content: space-between; font-size: 0.9em; padding: 5px 0; color: #666; }
+        .variant-price { font-weight: 500; color: #1A1A1A; }
+        .allergens-legend { background: #FFFFFF; border-radius: 4px; padding: 35px; margin-top: 50px; box-shadow: 0 2px 20px rgba(0,0,0,0.04); }
+        .allergens-legend h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.5em; font-weight: 600; color: #1A1A1A; margin-bottom: 25px; text-align: center; letter-spacing: 1px; }
+        .legend-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
+        .legend-tab { padding: 10px 20px; background: #F5F5F5; border: none; border-radius: 30px; color: #666; cursor: pointer; transition: all 0.3s ease; font-family: 'Montserrat', sans-serif; font-size: 0.85em; font-weight: 500; letter-spacing: 0.5px; }
+        .legend-tab.active { background: #1A1A1A; color: #FFFFFF; }
+        .legend-tab:hover { background: #E8E8E8; }
+        .legend-tab.active:hover { background: #333; }
+        .legend-content { display: none; }
+        .legend-content.active { display: block; }
+        .legend-list { list-style: none; }
+        .legend-item { display: flex; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #F0F0F0; }
+        .legend-item:last-child { border-bottom: none; }
+        .legend-number { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; background: #FFF8E7; border: 1px solid #B8860B; border-radius: 50%; font-size: 0.85em; font-weight: 600; color: #B8860B; margin-right: 15px; flex-shrink: 0; }
+        .legend-text { font-size: 0.9em; color: #555; line-height: 1.5; }
+        .footer { text-align: center; padding: 40px 20px; margin-top: 40px; color: #AAA; font-size: 0.8em; font-weight: 300; letter-spacing: 1px; }
+        .footer a { color: #B8860B; text-decoration: none; font-weight: 400; }
+        .footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            .header { padding: 40px 15px; }
+            .restaurant-name { font-size: 2.2em; letter-spacing: 2px; }
+            .menu-title { letter-spacing: 5px; font-size: 0.8em; }
+            .category-title { font-size: 1.5em; padding: 20px; }
+            .subcategory { padding: 0 20px; }
+            .subcategory-title { padding: 15px 20px; width: calc(100% + 40px); margin-left: -20px; margin-right: -20px; }
+            .menu-item { flex-direction: row; align-items: center; }
+            .item-info { padding-right: 15px; margin-bottom: 0; text-align: left; }
+            .item-price { align-self: center; }
+            .allergens-legend { padding: 25px 20px; }
+            .item-foto-wrapper { width: calc(100% + 40px); margin-left: -20px; margin-right: -20px; }
+            .item-foto { height: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <p class="menu-title">Menu</p>
+        <div class="divider"></div>
+        <h1 class="restaurant-name" id="restaurantName"></h1>
+    </div>
+
+    <div class="container">
+        <div id="content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>CARICAMENTO</p>
+            </div>
+        </div>
+
+        <div class="allergens-legend" id="allergensLegend" style="display: none;">
+            <h3>Reg. (UE) n. 1169/2011</h3>
+            <div class="legend-tabs">
+                <button class="legend-tab active" onclick="showLegend('it')">Italiano</button>
+                <button class="legend-tab" onclick="showLegend('de')">Deutsch</button>
+                <button class="legend-tab" onclick="showLegend('en')">English</button>
+                <button class="legend-tab" onclick="showLegend('fr')">Français</button>
+            </div>
+            <div class="legend-content active" id="legend-it">
+                <ul class="legend-list">
+                    <li class="legend-item"><span class="legend-number">1</span><span class="legend-text">Cereali contenenti glutine, vale a dire: grano (farro e grano khorasan), segale, orzo, avena o i loro ceppi ibridati e prodotti derivati</span></li>
+                    <li class="legend-item"><span class="legend-number">2</span><span class="legend-text">Crostacei e prodotti a base di crostacei</span></li>
+                    <li class="legend-item"><span class="legend-number">3</span><span class="legend-text">Uova e prodotti a base di uova</span></li>
+                    <li class="legend-item"><span class="legend-number">4</span><span class="legend-text">Pesce e prodotti a base di pesce</span></li>
+                    <li class="legend-item"><span class="legend-number">5</span><span class="legend-text">Arachidi e prodotti a base di arachidi</span></li>
+                    <li class="legend-item"><span class="legend-number">6</span><span class="legend-text">Soia e prodotti a base di soia</span></li>
+                    <li class="legend-item"><span class="legend-number">7</span><span class="legend-text">Latte e prodotti a base di latte (incluso il lattosio)</span></li>
+                    <li class="legend-item"><span class="legend-number">8</span><span class="legend-text">Frutta a guscio: mandorle, nocciole, noci, noci di acagiù, noci di pecan, noci del Brasile, pistacchi, noci macadamia e i loro prodotti</span></li>
+                    <li class="legend-item"><span class="legend-number">9</span><span class="legend-text">Sedano e prodotti a base di sedano</span></li>
+                    <li class="legend-item"><span class="legend-number">10</span><span class="legend-text">Senape e prodotti a base di senape</span></li>
+                    <li class="legend-item"><span class="legend-number">11</span><span class="legend-text">Semi di sesamo e prodotti a base di semi di sesamo</span></li>
+                    <li class="legend-item"><span class="legend-number">12</span><span class="legend-text">Anidride solforosa e solfiti > 10 mg/kg o 10 mg/l SO₂</span></li>
+                    <li class="legend-item"><span class="legend-number">13</span><span class="legend-text">Lupini e prodotti a base di lupini</span></li>
+                    <li class="legend-item"><span class="legend-number">14</span><span class="legend-text">Molluschi e prodotti a base di molluschi</span></li>
+                </ul>
+            </div>
+            <div class="legend-content" id="legend-de">
+                <ul class="legend-list">
+                    <li class="legend-item"><span class="legend-number">1</span><span class="legend-text">Glutenhaltiges Getreide, namentlich Weizen, Roggen, Gerste, Hafer sowie daraus hergestellte Erzeugnisse</span></li>
+                    <li class="legend-item"><span class="legend-number">2</span><span class="legend-text">Krebstiere und daraus gewonnene Erzeugnisse</span></li>
+                    <li class="legend-item"><span class="legend-number">3</span><span class="legend-text">Eier und daraus gewonnene Erzeugnisse</span></li>
+                    <li class="legend-item"><span class="legend-number">4</span><span class="legend-text">Fische und daraus gewonnene Erzeugnisse</span></li>
+                    <li class="legend-item"><span class="legend-number">5</span><span class="legend-text">Erdnüsse und daraus gewonnene Erzeugnisse</span></li>
+                    <li class="legend-item"><span class="legend-number">6</span><span class="legend-text">Sojabohnen und daraus gewonnene Erzeugnisse</span></li>
+                    <li class="legend-item"><span class="legend-number">7</span><span class="legend-text">Milch und daraus gewonnene Erzeugnisse (einschließlich Laktose)</span></li>
+                    <li class="legend-item"><span class="legend-number">8</span><span class="legend-text">Schalenfrüchte: Mandeln, Haselnüsse, Walnüsse, Kaschunüsse, Pecannüsse, Paranüsse, Pistazien, Macadamianüsse sowie daraus gewonnene Erzeugnisse</span></li>
+                    <li class="legend-item"><span class="legend-number">9</span><span class="legend-text">Sellerie und daraus gewonnene Erzeugnisse</span></li>
+                    <li class="legend-item"><span class="legend-number">10</span><span class="legend-text">Senf und daraus gewonnene Erzeugnisse</span></li>
+                    <li class="legend-item"><span class="legend-number">11</span><span class="legend-text">Sesamsamen und daraus gewonnene Erzeugnisse</span></li>
+                    <li class="legend-item"><span class="legend-number">12</span><span class="legend-text">Schwefeldioxid und Sulphite > 10 mg/kg oder 10 mg/l SO₂</span></li>
+                    <li class="legend-item"><span class="legend-number">13</span><span class="legend-text">Lupinen und daraus gewonnene Erzeugnisse</span></li>
+                    <li class="legend-item"><span class="legend-number">14</span><span class="legend-text">Weichtiere und daraus gewonnene Erzeugnisse</span></li>
+                </ul>
+            </div>
+            <div class="legend-content" id="legend-en">
+                <ul class="legend-list">
+                    <li class="legend-item"><span class="legend-number">1</span><span class="legend-text">Cereals containing gluten, namely: wheat, rye, barley, oats or their hybridised strains, and products thereof</span></li>
+                    <li class="legend-item"><span class="legend-number">2</span><span class="legend-text">Crustaceans and products thereof</span></li>
+                    <li class="legend-item"><span class="legend-number">3</span><span class="legend-text">Eggs and products thereof</span></li>
+                    <li class="legend-item"><span class="legend-number">4</span><span class="legend-text">Fish and products thereof</span></li>
+                    <li class="legend-item"><span class="legend-number">5</span><span class="legend-text">Peanuts and products thereof</span></li>
+                    <li class="legend-item"><span class="legend-number">6</span><span class="legend-text">Soybeans and products thereof</span></li>
+                    <li class="legend-item"><span class="legend-number">7</span><span class="legend-text">Milk and products thereof (including lactose)</span></li>
+                    <li class="legend-item"><span class="legend-number">8</span><span class="legend-text">Nuts: almonds, hazelnuts, walnuts, cashews, pecan nuts, Brazil nuts, pistachio nuts, macadamia nuts, and products thereof</span></li>
+                    <li class="legend-item"><span class="legend-number">9</span><span class="legend-text">Celery and products thereof</span></li>
+                    <li class="legend-item"><span class="legend-number">10</span><span class="legend-text">Mustard and products thereof</span></li>
+                    <li class="legend-item"><span class="legend-number">11</span><span class="legend-text">Sesame seeds and products thereof</span></li>
+                    <li class="legend-item"><span class="legend-number">12</span><span class="legend-text">Sulphur dioxide and sulphites > 10 mg/kg or 10 mg/l SO₂</span></li>
+                    <li class="legend-item"><span class="legend-number">13</span><span class="legend-text">Lupin and products thereof</span></li>
+                    <li class="legend-item"><span class="legend-number">14</span><span class="legend-text">Molluscs and products thereof</span></li>
+                </ul>
+            </div>
+            <div class="legend-content" id="legend-fr">
+                <ul class="legend-list">
+                    <li class="legend-item"><span class="legend-number">1</span><span class="legend-text">Céréales contenant du gluten: blé, seigle, orge, avoine et produits à base de ces céréales</span></li>
+                    <li class="legend-item"><span class="legend-number">2</span><span class="legend-text">Crustacés et produits à base de crustacés</span></li>
+                    <li class="legend-item"><span class="legend-number">3</span><span class="legend-text">Œufs et produits à base d'œufs</span></li>
+                    <li class="legend-item"><span class="legend-number">4</span><span class="legend-text">Poissons et produits à base de poissons</span></li>
+                    <li class="legend-item"><span class="legend-number">5</span><span class="legend-text">Arachides et produits à base d'arachides</span></li>
+                    <li class="legend-item"><span class="legend-number">6</span><span class="legend-text">Soja et produits à base de soja</span></li>
+                    <li class="legend-item"><span class="legend-number">7</span><span class="legend-text">Lait et produits à base de lait (y compris le lactose)</span></li>
+                    <li class="legend-item"><span class="legend-number">8</span><span class="legend-text">Fruits à coque: amandes, noisettes, noix, noix de cajou, noix de pécan, noix du Brésil, pistaches, noix de Macadamia et produits à base de ces fruits</span></li>
+                    <li class="legend-item"><span class="legend-number">9</span><span class="legend-text">Céleri et produits à base de céleri</span></li>
+                    <li class="legend-item"><span class="legend-number">10</span><span class="legend-text">Moutarde et produits à base de moutarde</span></li>
+                    <li class="legend-item"><span class="legend-number">11</span><span class="legend-text">Graines de sésame et produits à base de graines de sésame</span></li>
+                    <li class="legend-item"><span class="legend-number">12</span><span class="legend-text">Anhydride sulfureux et sulfites > 10 mg/kg ou 10 mg/l SO₂</span></li>
+                    <li class="legend-item"><span class="legend-number">13</span><span class="legend-text">Lupin et produits à base de lupin</span></li>
+                    <li class="legend-item"><span class="legend-number">14</span><span class="legend-text">Mollusques et produits à base de mollusques</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Powered by <a href="https://padiapps.com" target="_blank">PADIApps</a></p>
+    </div>
+
+    <script>
+        const MENU_API = 'https://qwqztdujrbgmlpbbguvk.supabase.co/functions/v1/menu-api';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const slug = urlParams.get('r') || window.location.pathname.replace('/', '').replace('.html', '');
+
+        function showLegend(lang) {
+            document.querySelectorAll('.legend-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.legend-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('legend-' + lang).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        async function loadMenu() {
+            const content = document.getElementById('content');
+            if (!slug) { showError('Nessun ristorante specificato'); return; }
+            try {
+                const res = await fetch(`${MENU_API}?slug=${slug}`);
+                const data = await res.json();
+
+                if (data.error) { showError(data.error); return; }
+
+                const restaurant = data.ristorante;
+                const categories = data.categorie;
+                const subcategories = data.sottocategorie;
+                const articles = data.articoli;
+                const immagini = data.immagini;
+
+                document.getElementById('restaurantName').textContent = restaurant.nome;
+                document.title = `Menu - ${restaurant.nome}`;
+                const canShowPhotos = restaurant.subscription_type !== 'foxorder_plans:professional-annuale';
+
+                const immaginiMap = {};
+                if (canShowPhotos && Array.isArray(immagini)) {
+                    immagini.forEach(img => { if (img.articolo_id && img.image_url) immaginiMap[img.articolo_id] = img.image_url; });
+                }
+
+                let html = '';
+                let hasAllergens = false;
+
+                categories.forEach(category => {
+                    const categorySubcats = subcategories.filter(s => s.categoria_id === category.id);
+                    if (categorySubcats.length === 0) return;
+                    html += `<div class="category">`;
+                    html += `<h2 class="category-title">${category.nome}</h2>`;
+                    categorySubcats.forEach(subcat => {
+                        const subcatArticles = articles.filter(a => a.sottocategoria_id === subcat.id);
+                        if (subcatArticles.length === 0) return;
+                        html += `<div class="subcategory">`;
+                        html += `<h3 class="subcategory-title">${subcat.nome}</h3>`;
+                        subcatArticles.forEach(article => {
+                            const fotoUrl = immaginiMap[article.id] || null;
+                            html += `<div class="item-card ${fotoUrl ? 'has-foto' : ''}">`;
+                            if (fotoUrl) {
+                                html += `<div class="item-foto-wrapper"><img class="item-foto" src="${fotoUrl}" alt="${article.nome}" loading="lazy"></div>`;
+                            }
+                            html += `<div class="menu-item">`;
+                            html += `<div class="item-info">`;
+                            html += `<div class="item-name">${article.nome}</div>`;
+                            if (article.description) html += `<div class="item-description">${article.description}</div>`;
+                            if (article.ingredients && article.ingredients.length > 0) {
+                                const ingredientNames = article.ingredients.map(i => i.nome || i.name || i).join(', ');
+                                html += `<div class="item-ingredients">${ingredientNames}</div>`;
+                            }
+                            if (article.allergeni && article.allergeni.length > 0) {
+                                hasAllergens = true;
+                                html += `<div class="item-allergens">`;
+                                article.allergeni.forEach(num => { html += `<span class="allergen-number">${num}</span>`; });
+                                html += `</div>`;
+                            }
+                            if (article.variants && article.variants.length > 0) {
+                                html += `<div class="item-variants">`;
+                                article.variants.forEach(v => {
+                                    html += `<div class="variant"><span>${v.nome || v.name}</span><span class="variant-price">€ ${parseFloat(v.prezzo || v.price).toFixed(2)}</span></div>`;
+                                });
+                                html += `</div>`;
+                            }
+                            html += `</div>`;
+                            if (!article.variants || article.variants.length === 0) {
+                                const priceText = parseFloat(article.prezzo).toFixed(2);
+                                const priceUnit = article.price_type === 'perKg' ? '/kg' : '';
+                                html += `<div class="item-price">${priceText}${priceUnit}</div>`;
+                            }
+                            html += `</div>`;
+                            html += `</div>`;
+                        });
+                        html += `</div>`;
+                    });
+                    html += `</div>`;
+                });
+
+                if (html === '') html = '<div class="error"><p>Menu vuoto</p></div>';
+                content.innerHTML = html;
+                if (hasAllergens) document.getElementById('allergensLegend').style.display = 'block';
+
+            } catch (error) {
+                console.error('Errore:', error);
+                showError('Errore: ' + error.message);
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('content').innerHTML = `<div class="error"><div class="error-icon">✕</div><p>${message}</p></div>`;
+        }
+
+        loadMenu();
+    </script>
+</body>
+</html>
